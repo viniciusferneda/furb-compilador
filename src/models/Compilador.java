@@ -8,6 +8,7 @@ import gals.Lexico;
 public class Compilador {
 
     private Lexico lexico;
+    private String teste;
     
     public Compilador(){
         this.lexico = new Lexico();
@@ -15,6 +16,5 @@ public class Compilador {
     
     public String compilar(String codigo){
         return null;
-        
     }
 }
