@@ -208,7 +208,7 @@ public class Compilador {
             } else if (ex.getMessage().toUpperCase().contains("IDENTIFICADOR")) {
                 msg = "Erro na linha " + linha + ": identificador inválido";
             } else {
-                msg = "erro lexico nao esperado";
+                msg = "Comentário de bloco não finalizado";
             }
 
             throw new LexicalErrorAdapter(msg, ex, linha);
