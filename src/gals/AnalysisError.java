@@ -21,7 +21,6 @@ public class AnalysisError extends Exception
         return position;
     }
 
-    @Override
     public String toString()
     {
         return super.toString() + ", @ "+position;
