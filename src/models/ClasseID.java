@@ -10,7 +10,6 @@ public enum ClasseID {
     identificador(Constantes.IDENTIFICADOR),
     constanteNumerica(Constantes.CONSTANTENUMERICA),
     constanteLiteral(Constantes.CONSTANTELITERAL),
-    comentario(Constantes.COMENTARIO),
     simboloEspecial(Constantes.SIMBOLOESPECIAL);
 
     private String descricao;

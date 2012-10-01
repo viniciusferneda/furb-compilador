@@ -220,23 +220,31 @@ public class Compilador {
     private String montaLog(List<TokenAdapter> lTokenAdapter){
         StringBuilder codigoCompilado = new StringBuilder();
         codigoCompilado.append("linha");
-        codigoCompilado.append("          ");
+        codigoCompilado.append("     ");
         codigoCompilado.append("classe");
-        codigoCompilado.append("                  ");
+        codigoCompilado.append("                   ");
         codigoCompilado.append("lexema");
         codigoCompilado.append("\n");
         
         for (TokenAdapter umToken : lTokenAdapter) {
-            codigoCompilado.append(umToken.getLinha());
-            codigoCompilado.append("          ");
-            codigoCompilado.append(umToken.getClasse());
-            codigoCompilado.append("                  ");
+            codigoCompilado.append(umToken.getLinha());            
+            codigoCompilado.append(preencheEspaco(String.valueOf(umToken.getLinha()).length(), 10));
+            codigoCompilado.append(umToken.getClasse().getDescricao());
+            codigoCompilado.append(preencheEspaco(umToken.getClasse().getDescricao().length(), 25));
             codigoCompilado.append(umToken.getLexeme());
             codigoCompilado.append("\n");
         }
         
-        codigoCompilado.append("Programa compilado com sucesso!");
+        codigoCompilado.append("\nPrograma compilado com sucesso!");
         
         return codigoCompilado.toString();
+    }
+    
+    private String preencheEspaco(int stringSize, int qtdDesejada){
+        String vazio = "";
+        for (int i = 0; i < qtdDesejada-stringSize; i++) {
+            vazio += " ";
+        }
+        return vazio;
     }
 }
