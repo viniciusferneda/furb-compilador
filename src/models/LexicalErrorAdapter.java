@@ -3,11 +3,9 @@ package models;
 import gals.LexicalError;
 
 /**
- *
  * @author Vinicius Ferneda de Lima
  */
 public class LexicalErrorAdapter extends Exception{
-    
     private LexicalError erro;
     private int linha;
 
@@ -18,14 +16,15 @@ public class LexicalErrorAdapter extends Exception{
     }
 
     public int getColuna() {
-        if (erro == null){
+        if (erro == null)
             return -1;
-        }
         return erro.getPosition();
     }
 
     public int getLinha() {
         return linha;
     }
-    
+
+
+
 }

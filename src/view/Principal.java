@@ -22,6 +22,7 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.filechooser.FileFilter;
 import models.Compilador;
 import models.LexicalErrorAdapter;
+import models.SyntaticErrorAdapter;
 
 /**
  *
@@ -374,10 +375,12 @@ public class Principal extends javax.swing.JFrame {
         Compilador lexico = new Compilador();
         
         try {     
-            codigoCompilado = lexico.compilarLexico(txtEditor.getText());
-            txtMensagem.setText(codigoCompilado);
+            codigoCompilado = lexico.compilar(txtEditor.getText());
+            txtMensagem.setText("Programa compilado com sucesso!");
         } catch (LexicalErrorAdapter ex) {
             txtMensagem.setText(ex.getMessage());
+        } catch (SyntaticErrorAdapter ex) {
+              txtMensagem.setText(ex.getMessage());
         } catch (Exception ex) {
             txtMensagem.setText(ex.getMessage());
         }
