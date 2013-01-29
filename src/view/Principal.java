@@ -15,7 +15,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
@@ -23,7 +22,6 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.filechooser.FileFilter;
 import models.Compilador;
 import models.LexicalErrorAdapter;
-import models.TokenAdapter;
 
 /**
  *
@@ -124,7 +122,7 @@ public class Principal extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Compilador");
         setLocationByPlatform(true);
-        setMinimumSize(new java.awt.Dimension(810, 0));
+        setMinimumSize(new java.awt.Dimension(810, 100));
 
         jSeparator3.setOrientation(javax.swing.SwingConstants.VERTICAL);
 

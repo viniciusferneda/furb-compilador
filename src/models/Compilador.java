@@ -35,8 +35,8 @@ public class Compilador {
             String quebraLinha = "\n";
             String[] linhasDoCodigo = codigoCompilar.split(quebraLinha);
             for (String linhaDoCodigo : linhasDoCodigo) {
-                linhaDoCodigo += quebraLinha; //devolve a quebra de linha que foi removida no split                
                 ultimaLinhaDoCodigoAnalisada = linhaDoCodigo;
+                linhaDoCodigo += quebraLinha; //devolve a quebra de linha que foi removida no split                
                 lexico.setInput(new java.io.StringReader(linhaDoCodigo));
 
                 linha++;
@@ -180,7 +180,7 @@ public class Compilador {
                             classe = ClasseID.simboloEspecial;
                             break;
                         case Constants.t_palavraReservada:
-                            throw new LexicalError("Erro identificando palavraReservada");
+                            throw new LexicalError("Erro identificando palavraReservada", token.getPosition());
                         default:
                             throw new Exception("Tipo de token não esperado!");
                     }
@@ -198,23 +198,37 @@ public class Compilador {
             String msg;
 
             if (ex.getMessage().toUpperCase().contains("CARACTERE")) {
-                msg = "Erro na linha " + linha + ": " + ultimaLinhaDoCodigoAnalisada.charAt(ex.getPosition()) + " símbolo inválido";
+                msg = "Erro na linha " + linha + " - " + ultimaLinhaDoCodigoAnalisada.charAt(ex.getPosition()) + " símbolo inválido";
             } else if (ex.getMessage().toUpperCase().contains("PALAVRARESERVADA")) {
-                msg = "Erro na linha " + linha + ": palavra reservada inválida";
+                msg = "Erro na linha " + linha + " - " + recuperaPalavra(ultimaLinhaDoCodigoAnalisada, ex.getPosition()) + " palavra reservada inválida";
             } else if (ex.getMessage().toUpperCase().contains("CONSTLIT")) {
-                msg = "Erro na linha " + linha + ": constante literal inválida ou não finalizada";
+                msg = "Erro na linha " + linha + " - constante literal inválida ou não finalizada";
             } else if (ex.getMessage().toUpperCase().contains("CONSTNUM")) {
-                msg = "Erro na linha " + linha + ": constante numérica inválida";
+                msg = "Erro na linha " + linha + " - constante numérica inválida";
             } else if (ex.getMessage().toUpperCase().contains("IDENTIFICADOR")) {
-                msg = "Erro na linha " + linha + ": identificador inválido";
+                msg = "Erro na linha " + linha + " - " + recuperaPalavra(ultimaLinhaDoCodigoAnalisada, ex.getPosition()) + " identificador inválido";
             } else {
-                msg = "Comentário de bloco não finalizado";
+                msg = "Erro na linha " + linha + " – comentário de bloco não finalizado";
             }
 
             throw new LexicalErrorAdapter(msg, ex, linha);
         }
         
         return null;
+    }
+    
+    private String recuperaPalavra(String linha, int posicaoInicial){
+        String palavra = "";
+        
+        for (int i = posicaoInicial; i < linha.length(); i++) {
+            if(!" ".equals(String.valueOf(linha.charAt(i)))){
+                palavra += linha.charAt(i);
+            }else{
+                break;
+            }            
+        }
+        
+        return palavra;
     }
     
     private String montaLog(List<TokenAdapter> lTokenAdapter){
