@@ -61,9 +61,9 @@ public class Compilador {
             
             String msg = "Erro na linha " + linha + ": ";
             if (ex.getToken().getLexeme().equals("$")) {
-                msg += SyntaticErrorAdapter.trataMensagem("encontrado fim do programa, esperado {0}.", ex.getMessage());
+                msg += SyntaticErrorAdapter.trataMensagem("encontrado fim do programa, {0}.", ex.getMessage());
             } else {
-                msg += SyntaticErrorAdapter.trataMensagem("encontrado \"{0}\" ({1}), esperado {2}.",ex.getToken().getLexeme(),strClasse,ex.getMessage());
+                msg += SyntaticErrorAdapter.trataMensagem("encontrado {1}, {2}.",ex.getToken().getLexeme(),strClasse,ex.getMessage());
             }                
             throw new SyntaticErrorAdapter(msg, ex, linha);
         }          
