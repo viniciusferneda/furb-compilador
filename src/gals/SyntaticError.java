@@ -1,6 +1,6 @@
 package gals;
 
-public class SyntaticError extends Exception{
+public class SyntaticError extends AnalysisError{
     
     private Token token;
     
@@ -13,6 +13,7 @@ public class SyntaticError extends Exception{
         super(msg);
     }
     
+    @Override
     public int getPosition() {
         return token.getPosition();
     }

@@ -95,6 +95,9 @@ public class Compilador {
     private String getStrClasseToken(Token token) {
         ClasseID classe = null;
         switch (token.getId()) {
+            case Constants.t_palavraReservada:
+                classe = ClasseID.palavraReservada;
+                break;
             case Constants.t_and:
                 classe = ClasseID.palavraReservada;
                 break;
