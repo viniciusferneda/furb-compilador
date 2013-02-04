@@ -3,6 +3,7 @@ package models;
 import gals.Constants;
 import gals.LexicalError;
 import gals.Lexico;
+import gals.SemanticError;
 import gals.Semantico;
 import gals.Sintatico;
 import gals.SyntaticError;
@@ -29,6 +30,8 @@ public class Compilador {
      * @throws Exception 
      */
     public String compilar(String codigoCompilar) throws LexicalErrorAdapter, Exception {
+        StringBuilder codigoGerado = new StringBuilder();
+        
         try {
             
             lexico.setInput(new java.io.StringReader(codigoCompilar));
@@ -66,9 +69,15 @@ public class Compilador {
                 msg += SyntaticErrorAdapter.trataMensagem("encontrado {1}, {2}.",ex.getToken().getLexeme(),strClasse,ex.getMessage());
             }                
             throw new SyntaticErrorAdapter(msg, ex, linha);
-        }          
+        } catch (SemanticError ex) {   
+            int linha = getLinha(codigoCompilar, ex.getPosition());
+            
+            String msg = "Erro na linha " + linha + ": " + ex.getMessage();
+            
+            throw new SemanticErrorAdapter(msg, ex, linha); 
+        }
         
-        return null;
+        return codigoGerado.toString();
     }
     
     private String recuperaPalavra(String linha, int posicaoInicial){

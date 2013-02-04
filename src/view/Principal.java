@@ -18,10 +18,12 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.filechooser.FileFilter;
 import models.Compilador;
 import models.LexicalErrorAdapter;
+import models.SemanticErrorAdapter;
 import models.SyntaticErrorAdapter;
 
 /**
@@ -275,6 +277,11 @@ public class Principal extends javax.swing.JFrame {
         btGerarCodigo.setFocusable(false);
         btGerarCodigo.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btGerarCodigo.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btGerarCodigo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btGerarCodigoActionPerformed(evt);
+            }
+        });
         tbFerramentas.add(btGerarCodigo);
 
         btEquipe.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/Information24.gif"))); // NOI18N
@@ -358,6 +365,10 @@ public class Principal extends javax.swing.JFrame {
         compilar();
     }//GEN-LAST:event_btCompilarActionPerformed
 
+    private void btGerarCodigoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btGerarCodigoActionPerformed
+        gerarCodigo();
+    }//GEN-LAST:event_btGerarCodigoActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -381,6 +392,8 @@ public class Principal extends javax.swing.JFrame {
             txtMensagem.setText(ex.getMessage());
         } catch (SyntaticErrorAdapter ex) {
               txtMensagem.setText(ex.getMessage());
+        } catch (SemanticErrorAdapter ex) {
+              txtMensagem.setText(ex.getMessage());
         } catch (Exception ex) {
             txtMensagem.setText(ex.getMessage());
         }
@@ -388,6 +401,28 @@ public class Principal extends javax.swing.JFrame {
         return codigoCompilado;
     }
     
+    private void gerarCodigo() {
+        if (file == null) {
+            JOptionPane.showMessageDialog(this, "Para gerar código é necessário primeiramente salvar o programa.", "Aviso", 1);
+        } else {
+            String codigoGerado = compilar();
+            FileWriter fw = null;
+            try {
+                fw = new FileWriter(file.getPath().substring(0, file.getPath().lastIndexOf("."))+".il", false);
+                fw.write(codigoGerado);
+                txtMensagem.setText("Código objeto gerado com sucesso!");
+            } catch (IOException ex) {
+                Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
+            } finally {
+                try {
+                    fw.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }               
+    }
+
     private void abrir() {
         int result = chooser.showOpenDialog(null);
         if (result == JFileChooser.APPROVE_OPTION) {
