@@ -6,12 +6,9 @@ package models;
  */
 public enum TipoID {
     
-    tpInt("int","int64","System.Int64"),
-    tpFloat("float","float64","System.Double"),
-    tpDate("date","int64","System.Int64"),
-    tpTime("time","int64","System.Int64"),
-    tpBoolean("boolean","bool","System.Boolean"),
-    tpString("string","string","System.String");
+    tpNumber("number","float64","System.Double"),
+    tpLogical("logical","bool","System.Boolean"),
+    tpCharacter("character","string","System.String");
             
     private String descricao;
     private String tipo;

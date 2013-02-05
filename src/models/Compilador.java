@@ -36,7 +36,7 @@ public class Compilador {
             
             lexico.setInput(new java.io.StringReader(codigoCompilar));
             
-            sintatico.parse(lexico, new Semantico());
+            sintatico.parse(lexico, new Semantico(codigoGerado));
 
         } catch (LexicalError ex) {
             int linha = getLinha(codigoCompilar, ex.getPosition());                    
