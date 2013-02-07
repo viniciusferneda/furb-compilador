@@ -98,6 +98,8 @@ public class Semantico implements Constants {
 
     private void acao_2() {
 
+        codigoSaida.append(codigoGerado);
+        
         codigoSaida.append("\n     ret");
         codigoSaida.append("\n  }");
         codigoSaida.append("\n}");
@@ -106,6 +108,10 @@ public class Semantico implements Constants {
 
     }
 
+    private void acao_3(){
+        
+    }
+    
     private void acao_12() throws SemanticError {
         TipoID tipo = desempilhaTipo();//desempilha o tipo empilhado pela acao_23, mas nao sera utilizado
 
@@ -242,6 +248,111 @@ public class Semantico implements Constants {
 
     private void acao_31() throws SemanticError {
         divide(3);
+    }
+
+    private void acao_34() throws SemanticError {
+        String texto = token.getLexeme();
+        char[] array = texto.toCharArray();
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] == ',') {
+                array[i] = '.';
+            }
+        }
+        texto = String.copyValueOf(array);
+        codigoGerado.append("\n     ldc.r8 ").append(texto);
+        tipos.push(TipoID.tpNumber); //empilha tipo number
+    }
+
+    private void acao_35() {
+        codigoGerado.append("\n     ldstr ").append(token.getLexeme());
+        tipos.push(TipoID.tpCharacter); //empilha tipo literal
+    }
+
+    private void acao_36() throws SemanticError {
+        TipoID tipo = desempilhaTipo();
+        
+        //verifica se a operacao pode ser atribuida pro identificador
+        boolean podeAlterar = estaContidoEm(tipo, TipoID.tpNumber);
+        if (!podeAlterar) {
+            String msg = "constante numérica inválida para expressões do tipo " + tipo.getDescricao();
+            throw new SemanticError(msg, token);
+        }
+        
+        String texto = token.getLexeme();
+        char[] array = texto.toCharArray();
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] == ',') {
+                array[i] = '.';
+            }
+        }
+        
+        texto = String.copyValueOf(array);
+        String[] valores = texto.split("."); //separa a parte inteira da fracionaria
+        
+        codigoGerado.append("\n     ldc.r8 ").append(valores[0]);
+        tipos.push(TipoID.tpNumber); //empilha tipo number
+    }
+
+    private void acao_37() throws SemanticError {
+        TipoID tipo = desempilhaTipo();
+        
+        //verifica se a operacao pode ser atribuida pro identificador
+        boolean podeAlterar = estaContidoEm(tipo, TipoID.tpNumber);
+        if (!podeAlterar) {
+            String msg = "constante numérica inválida para expressões do tipo " + tipo.getDescricao();
+            throw new SemanticError(msg, token);
+        }
+        
+        String texto = token.getLexeme();
+        char[] array = texto.toCharArray();
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] == ',') {
+                array[i] = '.';
+            }
+        }
+        
+        texto = String.copyValueOf(array);
+        String[] valores = texto.split("."); //separa a parte inteira da fracionaria
+        
+        //Verifica se a parte fracionário é maior ou igual a 5, então soma +1 na parte inteira
+        int parteInteira = Integer.parseInt(valores[0]);
+        if(valores.length > 1){
+            int parteFracionaria = Integer.parseInt(valores[1].substring(0, 1));
+            if(parteFracionaria >= 5){
+                parteInteira++;
+            }
+        }
+        
+        codigoGerado.append("\n     ldc.r8 ").append(parteInteira);
+        tipos.push(TipoID.tpNumber); //empilha tipo number
+    }
+
+    private void acao_38() throws SemanticError {
+        TipoID tipo = desempilhaTipo();
+
+        //verifica se a operacao pode ser atribuida pro identificador
+        boolean podeAlterar = estaContidoEm(tipo, TipoID.tpNumber);
+        if (!podeAlterar) {
+            String msg = "inversão de sinal inválida para expressões do tipo " + tipo.getDescricao();
+            throw new SemanticError(msg, token);
+        }
+
+        tipos.push(tipo);
+    }
+
+    private void acao_39() throws SemanticError {//muda sinal valor
+        TipoID tipo = desempilhaTipo();
+
+        //verifica se a operacao pode ser atribuida pro identificador
+        boolean podeAlterar = estaContidoEm(tipo, TipoID.tpNumber);
+        if (!podeAlterar) {
+            String msg = "inversão de sinal inválida para expressões do tipo " + tipo.getDescricao();
+            throw new SemanticError(msg, token);
+        }
+
+        codigoGerado.append("\n     ldc.i8 -1 ");
+        codigoGerado.append("\n     mul");
+        tipos.push(tipo);
     }
 
     private TipoID desempilhaTipo() throws SemanticError {
