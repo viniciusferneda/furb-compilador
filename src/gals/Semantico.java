@@ -17,7 +17,6 @@ public class Semantico implements Constants {
     private Token token; //token da chamada do executeAction
     private StringBuilder codigoSaida; //codigo gerado pela rotina
     private StringBuilder codigoGerado; //codigo gerado pela rotina
-    private StringBuilder codigoDeclaracao; //codigo auxiliar para a declaracao de variaveis 
     private Map<String, Identificador> identificadores; //tabela de simbolos    
     private List<Token> ids; //lista de identificadores
     private Stack<String> desviosSE; //pilha de desvios do comando SE ELSE END
@@ -34,7 +33,6 @@ public class Semantico implements Constants {
     public Semantico(StringBuilder codigoSaida) {
         this.codigoSaida = codigoSaida;
         this.codigoGerado = new StringBuilder();
-        this.codigoDeclaracao = null;
         this.identificadores = new HashMap<String, Identificador>();
         this.ids = new ArrayList<Token>();
         this.desviosSE = new Stack<String>();
@@ -82,6 +80,7 @@ public class Semantico implements Constants {
         }
     }
 
+    //inicio do programa
     private void acao_1() {
 
         codigoSaida.append(".assembly extern mscorlib{}");
@@ -96,10 +95,11 @@ public class Semantico implements Constants {
         System.out.println(codigoSaida);
     }
 
+    //finalização do programa
     private void acao_2() {
 
         codigoSaida.append(codigoGerado);
-        
+
         codigoSaida.append("\n     ret");
         codigoSaida.append("\n  }");
         codigoSaida.append("\n}");
@@ -108,15 +108,173 @@ public class Semantico implements Constants {
 
     }
 
-    private void acao_3(){
-        
+    //declaração de variaveis
+    private void acao_3() throws SemanticError {
+        codigoSaida.append("\n     .locals (");
+
+        if (ids.isEmpty()) {
+            String msg = "não foi definido um identificador";
+            throw new SemanticError(msg, token);
+        }
+
+        //procura o TipoID do tipo descrido no token
+        TipoID tipoIds = null;
+        for (TipoID tipo : TipoID.values()) {
+            if (token.getLexeme().equals(tipo.getDescricao())) {
+                tipoIds = tipo;
+                break;
+            }
+        }
+        if (tipoIds == null) {
+            String msg = "tipo " + token.getLexeme() + " é inválido";
+            throw new SemanticError(msg, token);
+        }
+        tipos.push(tipoIds);
+
+        List<Token> idsTemp = new ArrayList<Token>();
+        for (Token retirado : ids) {
+            idsTemp.add(retirado);
+        }
+
+        //adiciona na lista de identificadores os ids com o seu tipo
+        Token retirado = idsTemp.remove(0);
+        while (retirado != null) {
+            //verifica se identificador já foi declarado
+            if (id_module.getLexeme().equals(retirado.getLexeme())) {
+                String msg = "identificador \"" + retirado.getLexeme() + "\" declarado com o mesmo nome do módulo";
+                throw new SemanticError(msg, retirado);
+            }
+            boolean jaDeclarado = (identificadores.get(retirado.getLexeme()) != null);
+            if (!jaDeclarado) {
+                for (Token t1 : idsTemp) {
+                    if (retirado.getLexeme().equals(t1.getLexeme())) {
+                        jaDeclarado = true;
+                        break;
+                    }
+                }
+            }
+            if (jaDeclarado) {
+                String msg = "identificador \"" + retirado.getLexeme() + "\" já foi declarado";
+                throw new SemanticError(msg, retirado);
+            }
+
+            //cria novo identificador
+            Identificador id = new Identificador(retirado, tipoIds, identificadores.size());
+            identificadores.put(retirado.getLexeme(), id);
+
+            String texto = "";
+            if (identificadores.size() > 1) {
+                texto = ",\n";
+            }
+            texto += "          " + id.getTipo().getTipo() + " " + id.getNome();
+            codigoSaida.append(texto);
+
+            if (idsTemp.isEmpty()) {
+                retirado = null;
+            } else {
+                retirado = idsTemp.remove(0);
+            }
+        }
     }
-    
+
+    //empilha o tipo da variavel
+    private void acao_4() throws SemanticError {
+        //procura o TipoID do tipo descrido no token
+        TipoID tipoIds = null;
+        for (TipoID tipo : TipoID.values()) {
+            if (token.getLexeme().equals(tipo.getDescricao())) {
+                tipoIds = tipo;
+                break;
+            }
+        }
+        if (tipoIds == null) {
+            String msg = "tipo " + token.getLexeme() + " é inválido";
+            throw new SemanticError(msg, token);
+        }
+        tipos.push(tipoIds);
+    }
+
+    private void acao_5() {
+        String texto = token.getLexeme();
+        char[] array = texto.toCharArray();
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] == ',') {
+                array[i] = '.';
+            }
+        }
+        texto = String.copyValueOf(array);
+        codigoGerado.append("\n     conv.i8 ").append(texto);
+        tipos.push(TipoID.tpNumber); //empilha tipo number
+    }
+
+    private void acao_6() {
+        ids.add(token);
+    }
+
+    private void acao_7() throws SemanticError {
+        TipoID tipo1 = desempilhaTipo(); //guarda tipo do valor na pilha   
+        tipos.push(tipo1); //empilha o tipo do valor na pilha para poder validar na funcao setaValorId
+
+        if (ids.size() > 1) {
+            for (int i = 1; i < ids.size(); i++) { //duplica o valor da pilha para cada identificador da pilha
+                codigoGerado.append("\n     dup"); //duplica valor existente na lista
+                tipos.push(tipo1);
+            }
+        }
+
+        for (Token retirado : ids) {
+            Identificador id = getIdentificador(retirado);
+            setaValorId(id); //atribui o valor na pilha para o identificador
+        }
+
+        tipos.push(tipo1); //empilha o tipo na pilha para poder remover na chamada obrigatoria desta acao com ";"
+    }
+
+    private void acao_10() throws SemanticError {
+        for (Token retirado : ids) {
+            Identificador id = getIdentificador(retirado); //identificador que irá receber a entrada
+
+            if (estaContidoEm(id.getTipo(), TipoID.tpLogical)) {
+                String msg = "tipo de entrada inválido: encontrado " + id.getTipo().getDescricao() + " mas era esperado int, float ou string";
+                throw new SemanticError(msg, token);
+            }
+
+            codigoGerado.append("\n     call string [mscorlib] System.Console::ReadLine()"); //le o dado da tela
+            if (id.getTipo() != TipoID.tpCharacter) { //a entrada da tela já é string
+                //codigo par converter para o tipo do identificador
+                String texto = "\n     call " + id.getTipo().getTipo() + " [mscorlib] " + id.getTipo().getClasse() + "::Parse(string)";
+                codigoGerado.append(texto);
+            }
+            tipos.push(id.getTipo());//seta o tipo de dado que foi inserido na pilha pela funcao acima
+
+            setaValorId(id);
+        }
+        ids.clear();
+    }
+
     private void acao_12() throws SemanticError {
         TipoID tipo = desempilhaTipo();//desempilha o tipo empilhado pela acao_23, mas nao sera utilizado
 
         String texto = "\n     call void [mscorlib]System.Console::Write(" + tipo.getTipo() + ")";
         codigoGerado.append(texto);
+    }
+
+    private void acao_13() {
+    }
+
+    private void acao_14() {
+    }
+
+    private void acao_15() {
+    }
+
+    private void acao_16() {
+    }
+
+    private void acao_17() {
+    }
+
+    private void acao_18() {
     }
 
     private void acao_19() throws SemanticError {
@@ -246,10 +404,21 @@ public class Semantico implements Constants {
         divide(2);
     }
 
+    //retorna o resto (inteiro) da divisão
     private void acao_31() throws SemanticError {
         divide(3);
     }
 
+    private void acao_32() throws SemanticError {
+        Identificador id = getIdentificador(token);
+        if (!id.isIncicializado()) {
+            String msg = "identificador \"" + id.getNome() + "\" não foi inicializado";
+            throw new SemanticError(msg, token);
+        }
+        empilha(id);
+    }
+
+    //numerico
     private void acao_34() throws SemanticError {
         String texto = token.getLexeme();
         char[] array = texto.toCharArray();
@@ -263,67 +432,47 @@ public class Semantico implements Constants {
         tipos.push(TipoID.tpNumber); //empilha tipo number
     }
 
+    //literal
     private void acao_35() {
-        codigoGerado.append("\n     ldstr ").append(token.getLexeme());
+        String texto = token.getLexeme();
+        char[] array = texto.toCharArray();
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] == '\'') {
+                array[i] = '"';
+            }
+        }
+        texto = String.copyValueOf(array);
+        codigoGerado.append("\n     ldstr ").append(texto);
         tipos.push(TipoID.tpCharacter); //empilha tipo literal
     }
 
+    //trunk
     private void acao_36() throws SemanticError {
         TipoID tipo = desempilhaTipo();
-        
+
         //verifica se a operacao pode ser atribuida pro identificador
         boolean podeAlterar = estaContidoEm(tipo, TipoID.tpNumber);
         if (!podeAlterar) {
             String msg = "constante numérica inválida para expressões do tipo " + tipo.getDescricao();
             throw new SemanticError(msg, token);
         }
-        
-        String texto = token.getLexeme();
-        char[] array = texto.toCharArray();
-        for (int i = 0; i < array.length; i++) {
-            if (array[i] == ',') {
-                array[i] = '.';
-            }
-        }
-        
-        texto = String.copyValueOf(array);
-        String[] valores = texto.split("."); //separa a parte inteira da fracionaria
-        
-        codigoGerado.append("\n     ldc.r8 ").append(valores[0]);
+
+        codigoGerado.append("\n     conv.i8 ");
         tipos.push(TipoID.tpNumber); //empilha tipo number
     }
 
+    //round
     private void acao_37() throws SemanticError {
         TipoID tipo = desempilhaTipo();
-        
+
         //verifica se a operacao pode ser atribuida pro identificador
         boolean podeAlterar = estaContidoEm(tipo, TipoID.tpNumber);
         if (!podeAlterar) {
             String msg = "constante numérica inválida para expressões do tipo " + tipo.getDescricao();
             throw new SemanticError(msg, token);
         }
-        
-        String texto = token.getLexeme();
-        char[] array = texto.toCharArray();
-        for (int i = 0; i < array.length; i++) {
-            if (array[i] == ',') {
-                array[i] = '.';
-            }
-        }
-        
-        texto = String.copyValueOf(array);
-        String[] valores = texto.split("."); //separa a parte inteira da fracionaria
-        
-        //Verifica se a parte fracionário é maior ou igual a 5, então soma +1 na parte inteira
-        int parteInteira = Integer.parseInt(valores[0]);
-        if(valores.length > 1){
-            int parteFracionaria = Integer.parseInt(valores[1].substring(0, 1));
-            if(parteFracionaria >= 5){
-                parteInteira++;
-            }
-        }
-        
-        codigoGerado.append("\n     ldc.r8 ").append(parteInteira);
+
+        codigoGerado.append("\n     ldc.r8 ");
         tipos.push(TipoID.tpNumber); //empilha tipo number
     }
 
@@ -447,5 +596,33 @@ public class Semantico implements Constants {
                 tipos.push(TipoID.tpNumber); //divisão normal sempre retorna float
                 break;
         }
+    }
+
+    private Identificador getIdentificador(Token token) throws SemanticError {
+        Identificador id = identificadores.get(token.getLexeme());
+        if (id == null) {
+            String msg = "identificador \"" + token.getLexeme() + "\" não foi declarado";
+            throw new SemanticError(msg, this.token);
+        }
+        return id;
+    }
+
+    private void empilha(Identificador id) {
+        codigoGerado.append("\n     ldloc ").append(id.getNome());
+        tipos.push(id.getTipo()); //adiciona tipo do identificador 
+    }
+
+    private void setaValorId(Identificador id) throws SemanticError {
+        TipoID tipo = desempilhaTipo();
+
+        boolean podeAlterar = (id.getTipo() == tipo) || (id.getTipo() == TipoID.tpNumber);
+        if (!podeAlterar) {
+            String msg = "operação de atribuição inválida: " + id.getTipo().getDescricao() + " <- " + tipo.getDescricao();
+            throw new SemanticError(msg, token);
+        }
+        String texto = "\n     stloc " + id.getNome();
+
+        codigoGerado.append(texto);
+        id.inicializou();
     }
 }
