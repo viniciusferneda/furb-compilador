@@ -264,20 +264,58 @@ public class Semantico implements Constants {
         codigoGerado.append(texto);
     }
 
-    //Inicio da seleção IfTruDo
-    private void acao_13() {
+    //Inicio da seleção IfTrueDo
+    private void acao_13() throws SemanticError {
+        TipoID tipo = desempilhaTipo();
+        if (tipo != TipoID.tpLogical) {
+            String msg = "Expressão do comando condicional inválida: esperado boolean, encontrado " + tipo.getDescricao();
+            throw new SemanticError(msg, token);
+        }
+        empilhaSE("brfalse");
     }
 
     //Fim da seleção
     private void acao_14() {
+        empilhaFimSE();
     }
 
     //Determina o proximo da seleção
     private void acao_15() {
+        empilhaELSE();
     }
 
+    private void empilhaSE(String cmdComparacao) throws SemanticError {
+        this.qtdDesviosSE++; //incrementa a quantidade de SE's no codigo  
+        String desvioSe = "_DESVIOSE" + (qtdDesviosSE);
+        desviosSE.push(desvioSe); //empilha desvio para o fim da parte true de SE
+        String texto = "\n     " + cmdComparacao + " " + desvioSe;
+        codigoGerado.append(texto);
+    }
+
+    private void empilhaFimSE() {
+        codigoGerado.append("\n").append(desviosSE.pop()).append(":"); //fim do SE/ELSE
+    }
+    
+    private void empilhaELSE() {
+        String desvioSE = desviosSE.pop(); //pega o nome do desvio do fim da parte true do SE
+        
+        //cria nome desvio ELSE
+        this.qtdDesviosELSE++;
+        String desvioELSE = "_DESVIOELSE" + (qtdDesviosELSE);
+        desviosSE.push(desvioELSE); //empilha legenda para o fim do else
+                
+        codigoGerado.append("\n     br ").append(desvioELSE); //vai para o fim do ELSE        
+        codigoGerado.append("\n").append(desvioSE).append(":"); //inicio do ELSE / fim da parte true do SE
+    }
+    
     //Inicio da repetição
     private void acao_16() {
+        this.qtdDesviosLOOP++; //incrementa a quantidade de SE's no codigo  
+        String nomeIni = "_DESVIOINILOOP" + (qtdDesviosLOOP);
+        desviosLOOP.push(nomeIni); //empilha desvio para o inicio do LOOP
+        codigoGerado.append("\n").append(nomeIni).append(":");
+        String nomeFim = "_DESVIOFIMLOOP" + (qtdDesviosLOOP);
+        desviosLOOP.push(nomeFim); //empilha desvio para o fim do LOOP
     }
 
     //Verificação se repetição deve continuar
@@ -286,6 +324,10 @@ public class Semantico implements Constants {
 
     //Saida da repetição
     private void acao_18() {
+        String desvioFim = desviosLOOP.pop(); //pega o nome do desvio do fim do loop 
+        String desvioIni = desviosLOOP.pop(); //pega o nome do desvio do inicio do loop
+        codigoGerado.append("\n     br ").append(desvioIni);
+        codigoGerado.append("\n").append(desvioFim).append(":"); 
     }
 
     //expressão lógica 'and' 
@@ -441,9 +483,9 @@ public class Semantico implements Constants {
         }
         empilha(id);
     }
-    
+
     //determina a expressão de um array
-    private void acao_33(){        
+    private void acao_33() {
     }
 
     //empilha uma constante numerica
