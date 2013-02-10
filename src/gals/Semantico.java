@@ -538,7 +538,7 @@ public class Semantico implements Constants {
         tipos.push(TipoID.tpNumber); //empilha tipo number
     }
 
-    //round (retorna a parte arredondada do parêmtro
+    //round (retorna a parte arredondada do parametro
     private void acao_37() throws SemanticError {
         TipoID tipo = desempilhaTipo();
 
