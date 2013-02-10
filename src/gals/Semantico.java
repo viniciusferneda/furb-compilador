@@ -81,12 +81,19 @@ public class Semantico implements Constants {
     }
 
     //inicio do programa
-    private void acao_1() {
+    private void acao_1() throws SemanticError {
 
+        this.id_module = token;
+        
+         if (!this.id_module.getLexeme().equals(token.getLexeme())) {
+            String msg = "identificador (\"" + token.getLexeme() + "\") diferente do utilizado para nomear o modulo (\"" + id_module.getLexeme() + "\")";
+            throw new SemanticError(msg, token);
+        } 
+        
         codigoSaida.append(".assembly extern mscorlib{}");
-        codigoSaida.append("\n.assembly vinicius{}");
-        codigoSaida.append("\n.module vinicius.exe");
-        codigoSaida.append("\n.class public vinicius");
+        codigoSaida.append("\n.assembly ").append(id_module.getLexeme()).append("{}");
+        codigoSaida.append("\n.module ").append(id_module.getLexeme()).append(".exe");
+        codigoSaida.append("\n.class public ").append(id_module.getLexeme());
         codigoSaida.append("\n{");
         codigoSaida.append("\n  .method public static void main ()");
         codigoSaida.append("\n  {");
