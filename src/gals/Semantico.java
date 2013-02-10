@@ -194,6 +194,7 @@ public class Semantico implements Constants {
         tipos.push(tipoIds);
     }
 
+    //empilha uma constante numérica truncada para determinar o tamanho do array
     private void acao_5() {
         String texto = token.getLexeme();
         char[] array = texto.toCharArray();
@@ -207,10 +208,12 @@ public class Semantico implements Constants {
         tipos.push(TipoID.tpNumber); //empilha tipo number
     }
 
+    //adiciona o identificadors a lista de identificadores
     private void acao_6() {
         ids.add(token);
     }
 
+    //atribui um valor ao identificador
     private void acao_7() throws SemanticError {
         TipoID tipo1 = desempilhaTipo(); //guarda tipo do valor na pilha   
         tipos.push(tipo1); //empilha o tipo do valor na pilha para poder validar na funcao setaValorId
@@ -230,6 +233,7 @@ public class Semantico implements Constants {
         tipos.push(tipo1); //empilha o tipo na pilha para poder remover na chamada obrigatoria desta acao com ";"
     }
 
+    //geração de código para leitura das variaveis
     private void acao_10() throws SemanticError {
         for (Token retirado : ids) {
             Identificador id = getIdentificador(retirado); //identificador que irá receber a entrada
@@ -252,6 +256,7 @@ public class Semantico implements Constants {
         ids.clear();
     }
 
+    //escreve o tipo das variáveis
     private void acao_12() throws SemanticError {
         TipoID tipo = desempilhaTipo();//desempilha o tipo empilhado pela acao_23, mas nao sera utilizado
 
@@ -259,24 +264,31 @@ public class Semantico implements Constants {
         codigoGerado.append(texto);
     }
 
+    //Inicio da seleção IfTruDo
     private void acao_13() {
     }
 
+    //Fim da seleção
     private void acao_14() {
     }
 
+    //Determina o proximo da seleção
     private void acao_15() {
     }
 
+    //Inicio da repetição
     private void acao_16() {
     }
 
+    //Verificação se repetição deve continuar
     private void acao_17() {
     }
 
+    //Saida da repetição
     private void acao_18() {
     }
 
+    //expressão lógica 'and' 
     private void acao_19() throws SemanticError {
         TipoID tipo1 = desempilhaTipo();
         TipoID tipo2 = desempilhaTipo();
@@ -295,6 +307,7 @@ public class Semantico implements Constants {
         tipos.push(TipoID.tpLogical);
     }
 
+    //expressão lógica 'or'
     private void acao_20() throws SemanticError {
         TipoID tipo1 = desempilhaTipo();
         TipoID tipo2 = desempilhaTipo();
@@ -313,16 +326,19 @@ public class Semantico implements Constants {
         tipos.push(TipoID.tpLogical);
     }
 
+    //expressao lógica 'true'
     private void acao_21() {
         codigoGerado.append("\n     ldc.i4.1");
         tipos.push(TipoID.tpLogical);
     }
 
+    //expressão logica 'false'
     private void acao_22() {
         codigoGerado.append("\n     ldc.i4.0");
         tipos.push(TipoID.tpLogical);
     }
 
+    //expressão lógica de negação 'not'
     private void acao_23() throws SemanticError {
         TipoID tipo = desempilhaTipo();
 
@@ -335,10 +351,12 @@ public class Semantico implements Constants {
         tipos.push(tipo);
     }
 
+    //determina o operador relacional da comparação
     private void acao_24() {
         this.operadorRelacional = token;
     }
 
+    //empilha o resultado da operação lógica
     private void acao_25() throws SemanticError {
         TipoID tipo1 = desempilhaTipo();
         TipoID tipo2 = desempilhaTipo();
@@ -384,31 +402,37 @@ public class Semantico implements Constants {
         tipos.push(TipoID.tpLogical); //empilha tipo do retorno da opreração
     }
 
+    //soma de valores numéricos
     private void acao_26() throws SemanticError {
         soma();
     }
 
+    //subtração de valores numéricos
     private void acao_27() throws SemanticError {
         subtrai();
     }
 
+    //multiplicação de valores numéricos
     private void acao_28() throws SemanticError {
         multiplica();
     }
 
+    //divisão de valores numéricos
     private void acao_29() throws SemanticError {
         divide();
     }
 
+    //retorna o quociente (inteiro) da divisão
     private void acao_30() throws SemanticError {
         divide(2);
     }
 
-    //retorna o resto (inteiro) da divisão
+    //retorna a parte inteira do parâmetro
     private void acao_31() throws SemanticError {
         divide(3);
     }
 
+    //empilha o identificador
     private void acao_32() throws SemanticError {
         Identificador id = getIdentificador(token);
         if (!id.isIncicializado()) {
@@ -417,8 +441,12 @@ public class Semantico implements Constants {
         }
         empilha(id);
     }
+    
+    //determina a expressão de um array
+    private void acao_33(){        
+    }
 
-    //numerico
+    //empilha uma constante numerica
     private void acao_34() throws SemanticError {
         String texto = token.getLexeme();
         char[] array = texto.toCharArray();
@@ -432,7 +460,7 @@ public class Semantico implements Constants {
         tipos.push(TipoID.tpNumber); //empilha tipo number
     }
 
-    //literal
+    //empilha uma constante literal
     private void acao_35() {
         String texto = token.getLexeme();
         char[] array = texto.toCharArray();
@@ -446,7 +474,7 @@ public class Semantico implements Constants {
         tipos.push(TipoID.tpCharacter); //empilha tipo literal
     }
 
-    //trunk
+    //trunk (retorna a parte inteira do parâmetro
     private void acao_36() throws SemanticError {
         TipoID tipo = desempilhaTipo();
 
@@ -461,7 +489,7 @@ public class Semantico implements Constants {
         tipos.push(TipoID.tpNumber); //empilha tipo number
     }
 
-    //round
+    //round (retorna a parte arredondada do parêmtro
     private void acao_37() throws SemanticError {
         TipoID tipo = desempilhaTipo();
 
@@ -476,6 +504,7 @@ public class Semantico implements Constants {
         tipos.push(TipoID.tpNumber); //empilha tipo number
     }
 
+    //troca de sinal para positiva do elemento
     private void acao_38() throws SemanticError {
         TipoID tipo = desempilhaTipo();
 
@@ -489,6 +518,7 @@ public class Semantico implements Constants {
         tipos.push(tipo);
     }
 
+    //troca de sinal para o negativo
     private void acao_39() throws SemanticError {//muda sinal valor
         TipoID tipo = desempilhaTipo();
 
