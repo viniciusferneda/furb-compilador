@@ -382,20 +382,25 @@ public class Principal extends javax.swing.JFrame {
     }   
     
     private String compilar() {
-        String codigoCompilado = null;
-        Compilador lexico = new Compilador();
+        String codigoCompilado = "";
         
-        try {     
-            codigoCompilado = lexico.compilar(txtEditor.getText());
-            txtMensagem.setText("Programa compilado com sucesso!");
-        } catch (LexicalErrorAdapter ex) {
-            txtMensagem.setText(ex.getMessage());
-        } catch (SyntaticErrorAdapter ex) {
-              txtMensagem.setText(ex.getMessage());
-        } catch (SemanticErrorAdapter ex) {
-              txtMensagem.setText(ex.getMessage());
-        } catch (Exception ex) {
-            txtMensagem.setText(ex.getMessage());
+        if (file == null) {
+            JOptionPane.showMessageDialog(this, "Para compilar é necessário primeiramente salvar o programa.", "Aviso", 1);
+        } else {
+            Compilador lexico = new Compilador();
+
+            try {     
+                codigoCompilado = lexico.compilar(txtEditor.getText());
+                txtMensagem.setText("Programa compilado com sucesso!");
+            } catch (LexicalErrorAdapter ex) {
+                txtMensagem.setText(ex.getMessage());
+            } catch (SyntaticErrorAdapter ex) {
+                  txtMensagem.setText(ex.getMessage());
+            } catch (SemanticErrorAdapter ex) {
+                  txtMensagem.setText(ex.getMessage());
+            } catch (Exception ex) {
+                txtMensagem.setText(ex.getMessage());
+            }
         }
         
         return codigoCompilado;

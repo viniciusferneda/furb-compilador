@@ -17,6 +17,7 @@ public class Semantico implements Constants {
     private Token token; //token da chamada do executeAction
     private StringBuilder codigoSaida; //codigo gerado pela rotina
     private StringBuilder codigoGerado; //codigo gerado pela rotina
+    private StringBuilder codigoDeclaracao; //codigo auxailiar para a delcaracao de variaveis 
     private Map<String, Identificador> identificadores; //tabela de simbolos    
     private List<Token> ids; //lista de identificadores
     private Stack<String> desviosSE; //pilha de desvios do comando SE ELSE END
@@ -33,6 +34,7 @@ public class Semantico implements Constants {
     public Semantico(StringBuilder codigoSaida) {
         this.codigoSaida = codigoSaida;
         this.codigoGerado = new StringBuilder();
+        this.codigoDeclaracao = null;
         this.identificadores = new HashMap<String, Identificador>();
         this.ids = new ArrayList<Token>();
         this.desviosSE = new Stack<String>();
@@ -105,6 +107,16 @@ public class Semantico implements Constants {
     //finalização do programa
     private void acao_2() {
 
+        //declara variaveis
+        codigoSaida.append("\n     .locals ("); 
+        
+        if (codigoDeclaracao != null) {
+            String texto = codigoDeclaracao.toString();
+            codigoSaida.append(texto.trim());
+        }
+        
+        codigoSaida.append(")");
+        
         codigoSaida.append(codigoGerado);
 
         codigoSaida.append("\n     ret");
@@ -117,26 +129,10 @@ public class Semantico implements Constants {
 
     //declaração de variaveis
     private void acao_3() throws SemanticError {
-        codigoSaida.append("\n     .locals (");
-
         if (ids.isEmpty()) {
             String msg = "não foi definido um identificador";
             throw new SemanticError(msg, token);
         }
-
-        //procura o TipoID do tipo descrido no token
-        TipoID tipoIds = null;
-        for (TipoID tipo : TipoID.values()) {
-            if (token.getLexeme().equals(tipo.getDescricao())) {
-                tipoIds = tipo;
-                break;
-            }
-        }
-        if (tipoIds == null) {
-            String msg = "tipo " + token.getLexeme() + " é inválido";
-            throw new SemanticError(msg, token);
-        }
-        tipos.push(tipoIds);
 
         List<Token> idsTemp = new ArrayList<Token>();
         for (Token retirado : ids) {
@@ -145,6 +141,7 @@ public class Semantico implements Constants {
 
         //adiciona na lista de identificadores os ids com o seu tipo
         Token retirado = idsTemp.remove(0);
+        TipoID tipo = desempilhaTipo();
         while (retirado != null) {
             //verifica se identificador já foi declarado
             if (id_module.getLexeme().equals(retirado.getLexeme())) {
@@ -166,15 +163,19 @@ public class Semantico implements Constants {
             }
 
             //cria novo identificador
-            Identificador id = new Identificador(retirado, tipoIds, identificadores.size());
+            Identificador id = new Identificador(retirado, tipo, identificadores.size());
             identificadores.put(retirado.getLexeme(), id);
-
+            
             String texto = "";
             if (identificadores.size() > 1) {
                 texto = ",\n";
             }
             texto += "          " + id.getTipo().getTipo() + " " + id.getNome();
-            codigoSaida.append(texto);
+
+            if (codigoDeclaracao == null) {
+                 codigoDeclaracao = new StringBuilder();                
+            }
+            codigoDeclaracao.append(texto);
 
             if (idsTemp.isEmpty()) {
                 retirado = null;
@@ -182,6 +183,9 @@ public class Semantico implements Constants {
                 retirado = idsTemp.remove(0);
             }
         }
+        
+        ids.clear();
+        
     }
 
     //empilha o tipo da variavel
@@ -240,6 +244,9 @@ public class Semantico implements Constants {
         tipos.push(tipo1); //empilha o tipo na pilha para poder remover na chamada obrigatoria desta acao com ";"
     }
 
+    private void acao_8(){
+    }
+    
     //geração de código para leitura das variaveis
     private void acao_10() throws SemanticError {
         for (Token retirado : ids) {
@@ -484,10 +491,6 @@ public class Semantico implements Constants {
     //empilha o identificador
     private void acao_32() throws SemanticError {
         Identificador id = getIdentificador(token);
-        if (!id.isIncicializado()) {
-            String msg = "identificador \"" + id.getNome() + "\" não foi inicializado";
-            throw new SemanticError(msg, token);
-        }
         empilha(id);
     }
 
@@ -523,7 +526,7 @@ public class Semantico implements Constants {
         tipos.push(TipoID.tpCharacter); //empilha tipo literal
     }
 
-    //trunk (retorna a parte inteira do parâmetro
+    //trunk (retorna a parte inteira do parâmetro)
     private void acao_36() throws SemanticError {
         TipoID tipo = desempilhaTipo();
 
@@ -538,7 +541,7 @@ public class Semantico implements Constants {
         tipos.push(TipoID.tpInt); //empilha tipo number
     }
 
-    //round (retorna a parte arredondada do parametro
+    //round (retorna a parte arredondada do parametro)
     private void acao_37() throws SemanticError {
         TipoID tipo = desempilhaTipo();
 
@@ -699,6 +702,5 @@ public class Semantico implements Constants {
         String texto = "\n     stloc " + id.getNome();
 
         codigoGerado.append(texto);
-        id.inicializou();
     }
 }
