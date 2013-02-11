@@ -468,7 +468,7 @@ public class Semantico implements Constants {
 
     //divisão de valores numéricos
     private void acao_29() throws SemanticError {
-        divide();
+        divide(1);
     }
 
     //retorna o quociente (inteiro) da divisão
@@ -535,7 +535,7 @@ public class Semantico implements Constants {
         }
 
         codigoGerado.append("\n     conv.i8 ");
-        tipos.push(TipoID.tpNumber); //empilha tipo number
+        tipos.push(TipoID.tpInt); //empilha tipo number
     }
 
     //round (retorna a parte arredondada do parametro
@@ -646,18 +646,13 @@ public class Semantico implements Constants {
 
     }
 
-    private void divide(int... tipo) throws SemanticError {//divide valores da pilha
+    private void divide(int operacao) throws SemanticError {//divide valores da pilha
         TipoID tipo1 = desempilhaTipo();
         TipoID tipo2 = desempilhaTipo();
 
         if (!estaContidoEm(TipoID.tpNumber, tipo1, tipo2)) {
             String msg = "operação de divisão inválida: " + tipo2.getDescricao() + " + " + tipo1.getDescricao();
             throw new SemanticError(msg, token);
-        }
-
-        int operacao = 1;
-        if (tipo == null) {
-            operacao = tipo[0];
         }
 
         switch (operacao) {
@@ -668,11 +663,13 @@ public class Semantico implements Constants {
                 break;
             case 2: //retorna apenas parte indeira
                 codigoGerado.append("\n     div");
-                tipos.push(TipoID.tpNumber); //divisão normal sempre retorna float
+                codigoGerado.append("\n     conv.i8 ");
+                tipos.push(TipoID.tpInt); //divisão normal sempre retorna float
                 break;
             case 3: //retorna apenas o resto da divisao
                 codigoGerado.append("\n     rem");
-                tipos.push(TipoID.tpNumber); //divisão normal sempre retorna float
+                codigoGerado.append("\n     conv.i8 ");
+                tipos.push(TipoID.tpInt); //divisão normal sempre retorna float
                 break;
         }
     }
