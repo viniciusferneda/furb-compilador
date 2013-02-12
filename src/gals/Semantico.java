@@ -299,8 +299,13 @@ public class Semantico implements Constants {
     }
 
     private void empilhaSE(String cmdComparacao) throws SemanticError {
-        this.qtdDesviosSE++; //incrementa a quantidade de SE's no codigo  
-        String desvioSe = "_DESVIOSE" + (qtdDesviosSE);
+        this.qtdDesviosSE++; //incrementa a quantidade de SE's no codigo
+        String desvioSe = "";
+        if(qtdDesviosSE < 10){
+            desvioSe = "r0" + (qtdDesviosSE);
+        }else{
+            desvioSe = "r" + (qtdDesviosSE);
+        }
         desviosSE.push(desvioSe); //empilha desvio para o fim da parte true de SE
         String texto = "\n     " + cmdComparacao + " " + desvioSe;
         codigoGerado.append(texto);
@@ -315,7 +320,12 @@ public class Semantico implements Constants {
         
         //cria nome desvio ELSE
         this.qtdDesviosELSE++;
-        String desvioELSE = "_DESVIOELSE" + (qtdDesviosELSE);
+        String desvioELSE = "";
+        if(qtdDesviosELSE < 10){
+            desvioELSE = "r0" + (qtdDesviosELSE);
+        }else{
+            desvioELSE = "r" + (qtdDesviosELSE);            
+        }
         desviosSE.push(desvioELSE); //empilha legenda para o fim do else
                 
         codigoGerado.append("\n     br ").append(desvioELSE); //vai para o fim do ELSE        
@@ -325,15 +335,36 @@ public class Semantico implements Constants {
     //Inicio da repetição
     private void acao_16() {
         this.qtdDesviosLOOP++; //incrementa a quantidade de SE's no codigo  
-        String nomeIni = "_DESVIOINILOOP" + (qtdDesviosLOOP);
+        
+        String nomeIni = "";
+        if(qtdDesviosLOOP < 10){
+            nomeIni = "r0" + (qtdDesviosLOOP);
+        }else{
+            nomeIni = "r" + (qtdDesviosLOOP);
+        }
         desviosLOOP.push(nomeIni); //empilha desvio para o inicio do LOOP
+        
         codigoGerado.append("\n").append(nomeIni).append(":");
-        String nomeFim = "_DESVIOFIMLOOP" + (qtdDesviosLOOP);
+        
+        String nomeFim = "";
+        if(qtdDesviosLOOP < 10){
+            nomeFim = "r0" + (qtdDesviosLOOP);
+        }else{
+            nomeFim = "r" + (qtdDesviosLOOP);
+        }
         desviosLOOP.push(nomeFim); //empilha desvio para o fim do LOOP
+        
     }
 
     //Verificação se repetição deve continuar
-    private void acao_17() {
+    private void acao_17() throws SemanticError {
+        if (desviosLOOP.size() == 0) {
+            String msg = "comando \"exit\" só pode ser utilizado dentro de um bloco de repetição";
+            throw new SemanticError(msg, token);
+        }
+        String desvio = desviosLOOP.pop(); //pega o nome do desvio de loop    
+        desviosLOOP.push(desvio); //guarda na pilha de novo para tirar no END do loop
+        codigoGerado.append("\n     br ").append(desvio);
     }
 
     //Saida da repetição
