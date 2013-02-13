@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -24,12 +25,11 @@ public class Semantico implements Constants {
     private Stack<String> desviosLOOP; //pilha de desvios do comando LOOP END
     private Stack<TipoID> tipos; //pilha de tipos
     private Token operadorRelacional; //operador relacional
-    private Token operadorAtribuicao; //operador relacional de atribuicao
     private Token id_module; //identificador como nome do programa
     private int tamMaxPilhaTipos; //guarda o tamanho máximo da pilha de tipos para saber qual o tamanho da pilha deve ser gerada no CIL
     private int qtdDesviosSE;
-    private int qtdDesviosELSE;
     private int qtdDesviosLOOP;
+    private boolean brtrue;
 
     public Semantico(StringBuilder codigoSaida) {
         this.codigoSaida = codigoSaida;
@@ -41,11 +41,10 @@ public class Semantico implements Constants {
         this.desviosLOOP = new Stack<String>();
         this.tipos = new Stack<TipoID>();
         this.operadorRelacional = null;
-        this.operadorAtribuicao = null;
         this.tamMaxPilhaTipos = 0;
         this.qtdDesviosSE = 0;
-        this.qtdDesviosELSE = 0;
         this.qtdDesviosLOOP = 0;
+        this.brtrue = false;
     }
 
     public void executeAction(int action, Token token) throws SemanticError {
@@ -229,22 +228,34 @@ public class Semantico implements Constants {
         TipoID tipo1 = desempilhaTipo(); //guarda tipo do valor na pilha   
         tipos.push(tipo1); //empilha o tipo do valor na pilha para poder validar na funcao setaValorId
 
-        if (ids.size() > 1) {
+        /*if (ids.size() > 1) {
             for (int i = 1; i < ids.size(); i++) { //duplica o valor da pilha para cada identificador da pilha
                 codigoGerado.append("\n     dup"); //duplica valor existente na lista
                 tipos.push(tipo1);
             }
-        }
+        }*/
 
-        for (Token retirado : ids) {
+        for (Iterator<Token> it = ids.iterator(); it.hasNext();) {
+            Token retirado = it.next();
+
             Identificador id = getIdentificador(retirado);
             setaValorId(id); //atribui o valor na pilha para o identificador
+            
+            it.remove();
         }
+        
+        /*for (Token retirado : ids) {
+            Identificador id = getIdentificador(retirado);
+            setaValorId(id); //atribui o valor na pilha para o identificador
+        }*/
 
         tipos.push(tipo1); //empilha o tipo na pilha para poder remover na chamada obrigatoria desta acao com ";"
     }
 
     private void acao_8(){
+    }
+    
+    private void acao_9(){
     }
     
     //geração de código para leitura das variaveis
@@ -270,6 +281,9 @@ public class Semantico implements Constants {
         ids.clear();
     }
 
+    private void acao_11(){
+    }
+    
     //escreve o tipo das variáveis
     private void acao_12() throws SemanticError {
         TipoID tipo = desempilhaTipo();//desempilha o tipo empilhado pela acao_23, mas nao sera utilizado
@@ -285,7 +299,7 @@ public class Semantico implements Constants {
             String msg = "Expressão do comando condicional inválida: esperado boolean, encontrado " + tipo.getDescricao();
             throw new SemanticError(msg, token);
         }
-        empilhaSE("brfalse");
+        empilhaSE();
     }
 
     //Fim da seleção
@@ -298,7 +312,7 @@ public class Semantico implements Constants {
         empilhaELSE();
     }
 
-    private void empilhaSE(String cmdComparacao) throws SemanticError {
+    private void empilhaSE() throws SemanticError {
         this.qtdDesviosSE++; //incrementa a quantidade de SE's no codigo
         String desvioSe = "";
         if(qtdDesviosSE < 10){
@@ -307,7 +321,17 @@ public class Semantico implements Constants {
             desvioSe = "r" + (qtdDesviosSE);
         }
         desviosSE.push(desvioSe); //empilha desvio para o fim da parte true de SE
-        String texto = "\n     " + cmdComparacao + " " + desvioSe;
+        
+        String texto = "";
+        
+        if(brtrue){
+            texto = "\n     brtrue " + desvioSe;
+            brtrue = false;
+        }else{
+            texto = "\n     brfalse " + desvioSe;
+            brtrue = true;
+        }
+        
         codigoGerado.append(texto);
     }
 
@@ -319,12 +343,12 @@ public class Semantico implements Constants {
         String desvioSE = desviosSE.pop(); //pega o nome do desvio do fim da parte true do SE
         
         //cria nome desvio ELSE
-        this.qtdDesviosELSE++;
+        this.qtdDesviosSE++;
         String desvioELSE = "";
-        if(qtdDesviosELSE < 10){
-            desvioELSE = "r0" + (qtdDesviosELSE);
+        if(qtdDesviosSE < 10){
+            desvioELSE = "r0" + (qtdDesviosSE);
         }else{
-            desvioELSE = "r" + (qtdDesviosELSE);            
+            desvioELSE = "r" + (qtdDesviosSE);            
         }
         desviosSE.push(desvioELSE); //empilha legenda para o fim do else
                 
@@ -471,15 +495,15 @@ public class Semantico implements Constants {
         } else if (aux.equals("<")) {
             codigoGerado.append("\n     clt");
         } else if (aux.equals("<=")) {
-            codigoGerado.append("\n     clt");
-            codigoGerado.append("\n     ldc.i4.0");
-            codigoGerado.append("\n     ceq");
+            codigoGerado.append("\n     clt"); //operação relacional menor que
+            codigoGerado.append("\n     ldc.i4.0"); //empilha a constante lógica false
+            codigoGerado.append("\n     ceq"); //executa operação relacional igual
         } else if (aux.equals(">")) {
             codigoGerado.append("\n     cgt");
         } else if (aux.equals(">=")) {
-            codigoGerado.append("\n     cgt");
-            codigoGerado.append("\n     ldc.i4.0");
-            codigoGerado.append("\n     ceq");
+            codigoGerado.append("\n     cgt"); //operação relacional maior que
+            codigoGerado.append("\n     ldc.i4.0"); //empilha a constante lógica false
+            codigoGerado.append("\n     ceq"); //executa operação relacional igual
         } else {
             String msg = "operador relacional inválido";
             throw new SemanticError(msg, token);
@@ -523,6 +547,16 @@ public class Semantico implements Constants {
     private void acao_32() throws SemanticError {
         Identificador id = getIdentificador(token);
         empilha(id);
+        
+        //remove id da lista
+        for (Iterator<Token> it = ids.iterator(); it.hasNext();) {
+            Token excluir = it.next();
+            Identificador idExcluir = getIdentificador(excluir);
+            if(idExcluir.getId() == id.getId()){
+                it.remove();
+                break;
+            }
+        }
     }
 
     //determina a expressão de um array
