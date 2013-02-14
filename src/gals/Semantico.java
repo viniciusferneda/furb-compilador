@@ -27,8 +27,7 @@ public class Semantico implements Constants {
     private Token operadorRelacional; //operador relacional
     private Token id_module; //identificador como nome do programa
     private int tamMaxPilhaTipos; //guarda o tamanho máximo da pilha de tipos para saber qual o tamanho da pilha deve ser gerada no CIL
-    private int qtdDesviosSE;
-    private int qtdDesviosLOOP;
+    private int qtdDesvios;
     private boolean brtrue;
 
     public Semantico(StringBuilder codigoSaida) {
@@ -42,8 +41,7 @@ public class Semantico implements Constants {
         this.tipos = new Stack<TipoID>();
         this.operadorRelacional = null;
         this.tamMaxPilhaTipos = 0;
-        this.qtdDesviosSE = 0;
-        this.qtdDesviosLOOP = 0;
+        this.qtdDesvios = 0;
         this.brtrue = false;
     }
 
@@ -228,13 +226,6 @@ public class Semantico implements Constants {
         TipoID tipo1 = desempilhaTipo(); //guarda tipo do valor na pilha   
         tipos.push(tipo1); //empilha o tipo do valor na pilha para poder validar na funcao setaValorId
 
-        /*if (ids.size() > 1) {
-            for (int i = 1; i < ids.size(); i++) { //duplica o valor da pilha para cada identificador da pilha
-                codigoGerado.append("\n     dup"); //duplica valor existente na lista
-                tipos.push(tipo1);
-            }
-        }*/
-
         for (Iterator<Token> it = ids.iterator(); it.hasNext();) {
             Token retirado = it.next();
 
@@ -244,11 +235,6 @@ public class Semantico implements Constants {
             it.remove();
         }
         
-        /*for (Token retirado : ids) {
-            Identificador id = getIdentificador(retirado);
-            setaValorId(id); //atribui o valor na pilha para o identificador
-        }*/
-
         tipos.push(tipo1); //empilha o tipo na pilha para poder remover na chamada obrigatoria desta acao com ";"
     }
 
@@ -313,12 +299,18 @@ public class Semantico implements Constants {
     }
 
     private void empilhaSE() throws SemanticError {
-        this.qtdDesviosSE++; //incrementa a quantidade de SE's no codigo
-        String desvioSe = "";
-        if(qtdDesviosSE < 10){
-            desvioSe = "r0" + (qtdDesviosSE);
+        //incrementa a quantidade de SE's no codigo
+        if(this.qtdDesvios == 0){
+            this.qtdDesvios++;
         }else{
-            desvioSe = "r" + (qtdDesviosSE);
+            this.qtdDesvios += 2;  
+        }
+        
+        String desvioSe = "";
+        if(qtdDesvios < 10){
+            desvioSe = "r0" + (qtdDesvios);
+        }else{
+            desvioSe = "r" + (qtdDesvios);
         }
         desviosSE.push(desvioSe); //empilha desvio para o fim da parte true de SE
         
@@ -343,12 +335,12 @@ public class Semantico implements Constants {
         String desvioSE = desviosSE.pop(); //pega o nome do desvio do fim da parte true do SE
         
         //cria nome desvio ELSE
-        this.qtdDesviosSE++;
+        this.qtdDesvios++;
         String desvioELSE = "";
-        if(qtdDesviosSE < 10){
-            desvioELSE = "r0" + (qtdDesviosSE);
+        if(qtdDesvios < 10){
+            desvioELSE = "r0" + (qtdDesvios);
         }else{
-            desvioELSE = "r" + (qtdDesviosSE);            
+            desvioELSE = "r" + (qtdDesvios);            
         }
         desviosSE.push(desvioELSE); //empilha legenda para o fim do else
                 
@@ -358,24 +350,24 @@ public class Semantico implements Constants {
     
     //Inicio da repetição
     private void acao_16() {
-        this.qtdDesviosLOOP++; //incrementa a quantidade de SE's no codigo  
+        //incrementa a quantidade de SE's no codigo
+        if(this.qtdDesvios == 0){
+            this.qtdDesvios++;
+        }else{
+            this.qtdDesvios += 2;  
+        }
         
         String nomeIni = "";
-        if(qtdDesviosLOOP < 10){
-            nomeIni = "r0" + (qtdDesviosLOOP);
+        if(qtdDesvios < 10){
+            nomeIni = "r0" + (qtdDesvios);
         }else{
-            nomeIni = "r" + (qtdDesviosLOOP);
+            nomeIni = "r" + (qtdDesvios);
         }
         desviosLOOP.push(nomeIni); //empilha desvio para o inicio do LOOP
         
         codigoGerado.append("\n").append(nomeIni).append(":");
         
-        String nomeFim = "";
-        if(qtdDesviosLOOP < 10){
-            nomeFim = "r0" + (qtdDesviosLOOP);
-        }else{
-            nomeFim = "r" + (qtdDesviosLOOP);
-        }
+        String nomeFim = String.valueOf(qtdDesvios);
         desviosLOOP.push(nomeFim); //empilha desvio para o fim do LOOP
         
     }
@@ -388,14 +380,28 @@ public class Semantico implements Constants {
         }
         String desvio = desviosLOOP.pop(); //pega o nome do desvio de loop    
         desviosLOOP.push(desvio); //guarda na pilha de novo para tirar no END do loop
-        codigoGerado.append("\n     br ").append(desvio);
+        int fim = Integer.parseInt(desvio) + 1;
+        if(fim < 10){
+            desvio = "r0"+fim;
+        }else{
+            desvio = "r"+fim;
+        }
+        codigoGerado.append("\n     brtrue ").append(desvio);
     }
 
     //Saida da repetição
     private void acao_18() {
         String desvioFim = desviosLOOP.pop(); //pega o nome do desvio do fim do loop 
         String desvioIni = desviosLOOP.pop(); //pega o nome do desvio do inicio do loop
+        
         codigoGerado.append("\n     br ").append(desvioIni);
+        
+        int fim = Integer.parseInt(desvioFim) + 1;
+        if(fim < 10){
+            desvioFim = "r0"+fim;
+        }else{
+            desvioFim = "r"+fim;
+        }
         codigoGerado.append("\n").append(desvioFim).append(":"); 
     }
 
