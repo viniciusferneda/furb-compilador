@@ -203,7 +203,7 @@ public class Semantico implements Constants {
     }
 
     //empilha uma constante numérica truncada para determinar o tamanho do array
-    private void acao_5() {
+    private void acao_5() throws SemanticError {
         String texto = token.getLexeme();
         char[] array = texto.toCharArray();
         for (int i = 0; i < array.length; i++) {
@@ -213,7 +213,6 @@ public class Semantico implements Constants {
         }
         texto = String.copyValueOf(array);
         codigoGerado.append("\n     conv.i8 ").append(texto);
-        tipos.push(TipoID.tpNumber); //empilha tipo number
     }
 
     //adiciona o identificadors a lista de identificadores
@@ -235,12 +234,27 @@ public class Semantico implements Constants {
             it.remove();
         }
         
-        tipos.push(tipo1); //empilha o tipo na pilha para poder remover na chamada obrigatoria desta acao com ";"
+        tipos.push(tipo1);
     }
 
-    private void acao_8(){
+    //read de array (#7)
+    private void acao_8() throws SemanticError{
+        TipoID tipo1 = desempilhaTipo(); //guarda tipo do valor na pilha   
+        tipos.push(tipo1); //empilha o tipo do valor na pilha para poder validar na funcao setaValorId
+
+        for (Iterator<Token> it = ids.iterator(); it.hasNext();) {
+            Token retirado = it.next();
+
+            Identificador id = getIdentificador(retirado);
+            setaValorId(id); //atribui o valor na pilha para o identificador
+            
+            it.remove();
+        }
+        
+        tipos.push(tipo1);
     }
     
+    //atribuição de identificador (#7)
     private void acao_9(){
     }
     
@@ -267,7 +281,27 @@ public class Semantico implements Constants {
         ids.clear();
     }
 
-    private void acao_11(){
+    //leitura da variavel (#10)
+    private void acao_11() throws SemanticError{
+         for (Token retirado : ids) {
+            Identificador id = getIdentificador(retirado); //identificador que irá receber a entrada
+
+            if (estaContidoEm(id.getTipo(), TipoID.tpLogical)) {
+                String msg = "tipo de entrada inválido: encontrado " + id.getTipo().getDescricao() + " mas era esperado int, float ou string";
+                throw new SemanticError(msg, token);
+            }
+
+            codigoGerado.append("\n     call string [mscorlib] System.Console::ReadLine()"); //le o dado da tela
+            if (id.getTipo() != TipoID.tpCharacter) { //a entrada da tela já é string
+                //codigo par converter para o tipo do identificador
+                String texto = "\n     call " + id.getTipo().getTipo() + " [mscorlib] " + id.getTipo().getClasse() + "::Parse(string)";
+                codigoGerado.append(texto);
+            }
+            tipos.push(id.getTipo());//seta o tipo de dado que foi inserido na pilha pela funcao acima
+
+            setaValorId(id);
+        }
+        ids.clear();
     }
     
     //escreve o tipo das variáveis
@@ -565,7 +599,7 @@ public class Semantico implements Constants {
         }
     }
 
-    //determina a expressão de um array
+    //empilha o identificador de um array(#32)
     private void acao_33() {
     }
 
