@@ -85,7 +85,7 @@ public class Semantico implements Constants {
         this.id_module = token;
         
          if (!this.id_module.getLexeme().equals(token.getLexeme())) {
-            String msg = "identificador (\"" + token.getLexeme() + "\") diferente do utilizado para nomear o modulo (\"" + id_module.getLexeme() + "\")";
+            String msg = "identificador (" + token.getLexeme() + ") diferente do utilizado para nomear o modulo (" + id_module.getLexeme() + ")";
             throw new SemanticError(msg, token);
         } 
         
@@ -142,7 +142,7 @@ public class Semantico implements Constants {
         while (retirado != null) {
             //verifica se identificador já foi declarado
             if (id_module.getLexeme().equals(retirado.getLexeme())) {
-                String msg = "identificador \"" + retirado.getLexeme() + "\" declarado com o mesmo nome do módulo";
+                String msg = "identificador (" + retirado.getLexeme() + ") declarado com o mesmo nome do módulo";
                 throw new SemanticError(msg, retirado);
             }
             boolean jaDeclarado = (identificadores.get(retirado.getLexeme()) != null);
@@ -155,7 +155,7 @@ public class Semantico implements Constants {
                 }
             }
             if (jaDeclarado) {
-                String msg = "identificador \"" + retirado.getLexeme() + "\" já foi declarado";
+                String msg = "identificador (" + retirado.getLexeme() + ") já foi declarado";
                 throw new SemanticError(msg, retirado);
             }
 
@@ -264,7 +264,7 @@ public class Semantico implements Constants {
             Identificador id = getIdentificador(retirado); //identificador que irá receber a entrada
 
             if (estaContidoEm(id.getTipo(), TipoID.tpLogical)) {
-                String msg = "tipo de entrada inválido: encontrado " + id.getTipo().getDescricao() + " mas era esperado int, float ou string";
+                String msg = "tipo de entrada inválido: encontrado (" + id.getTipo().getDescricao() + ") mas era esperado number ou character";
                 throw new SemanticError(msg, token);
             }
 
@@ -287,7 +287,7 @@ public class Semantico implements Constants {
             Identificador id = getIdentificador(retirado); //identificador que irá receber a entrada
 
             if (estaContidoEm(id.getTipo(), TipoID.tpLogical)) {
-                String msg = "tipo de entrada inválido: encontrado " + id.getTipo().getDescricao() + " mas era esperado int, float ou string";
+                String msg = "tipo de entrada inválido: encontrado (" + id.getTipo().getDescricao() + ") mas era esperado number ou character";
                 throw new SemanticError(msg, token);
             }
 
@@ -316,7 +316,7 @@ public class Semantico implements Constants {
     private void acao_13() throws SemanticError {
         TipoID tipo = desempilhaTipo();
         if (tipo != TipoID.tpLogical) {
-            String msg = "Expressão do comando condicional inválida: esperado boolean, encontrado " + tipo.getDescricao();
+            String msg = "Expressão do comando condicional inválida: esperado logical, encontrado (" + tipo.getDescricao() + ")";
             throw new SemanticError(msg, token);
         }
         empilhaSE();
@@ -446,7 +446,7 @@ public class Semantico implements Constants {
 
         //verifica se a operacao pode ser atribuida 
         if (tipo1 != TipoID.tpLogical) {
-            String msg = "operdador \"and\" é inválido para o tipo " + tipo1.getDescricao();
+            String msg = "operador \"and\" é inválido para o tipo " + tipo1.getDescricao();
             throw new SemanticError(msg, token);
         }
         if (tipo2 != TipoID.tpLogical) {
@@ -535,13 +535,13 @@ public class Semantico implements Constants {
         } else if (aux.equals("<")) {
             codigoGerado.append("\n     clt");
         } else if (aux.equals("<=")) {
-            codigoGerado.append("\n     clt"); //operação relacional menor que
+            codigoGerado.append("\n     cgt"); //operação relacional maior que
             codigoGerado.append("\n     ldc.i4.0"); //empilha a constante lógica false
             codigoGerado.append("\n     ceq"); //executa operação relacional igual
         } else if (aux.equals(">")) {
             codigoGerado.append("\n     cgt");
         } else if (aux.equals(">=")) {
-            codigoGerado.append("\n     cgt"); //operação relacional maior que
+            codigoGerado.append("\n     clt"); //operação relacional menor que
             codigoGerado.append("\n     ldc.i4.0"); //empilha a constante lógica false
             codigoGerado.append("\n     ceq"); //executa operação relacional igual
         } else {
@@ -785,7 +785,7 @@ public class Semantico implements Constants {
     private Identificador getIdentificador(Token token) throws SemanticError {
         Identificador id = identificadores.get(token.getLexeme());
         if (id == null) {
-            String msg = "identificador \"" + token.getLexeme() + "\" não foi declarado";
+            String msg = "identificador (" + token.getLexeme() + ") não foi declarado";
             throw new SemanticError(msg, this.token);
         }
         return id;
@@ -801,7 +801,7 @@ public class Semantico implements Constants {
 
         boolean podeAlterar = (id.getTipo() == tipo) || (id.getTipo() == TipoID.tpNumber);
         if (!podeAlterar) {
-            String msg = "operação de atribuição inválida: " + id.getTipo().getDescricao() + " <- " + tipo.getDescricao();
+            String msg = "tipos incompatíveis em comando de atribuição (" + id.getTipo().getDescricao() + ", " + tipo.getDescricao() + ")";
             throw new SemanticError(msg, token);
         }
         String texto = "\n     stloc " + id.getNome();
