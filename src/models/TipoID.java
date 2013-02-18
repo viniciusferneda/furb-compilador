@@ -9,7 +9,10 @@ public enum TipoID {
     tpNumber("number","float64","System.Double"),
     tpInt("int","int64","System.Int64"),
     tpLogical("logical","bool","System.Boolean"),
-    tpCharacter("character","string","System.String");
+    tpCharacter("character","string","System.String"),
+    
+    tpNumberArray("number","float64[]","System.Double"),
+    tpCharacterArray("character","string[]","System.String");
     
     private String descricao;
     private String tipo;

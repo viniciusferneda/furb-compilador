@@ -213,6 +213,7 @@ public class Semantico implements Constants {
         }
         texto = String.copyValueOf(array);
         codigoGerado.append("\n     conv.i8 ").append(texto);
+        tipos.push(TipoID.tpNumber);
     }
 
     //adiciona o identificadors a lista de identificadores
@@ -239,6 +240,11 @@ public class Semantico implements Constants {
 
     //read de array (#7)
     private void acao_8() throws SemanticError{
+        System.out.println("ação 8");
+    }
+    
+    //atribuição de identificador (#7)
+    private void acao_9() throws SemanticError{
         TipoID tipo1 = desempilhaTipo(); //guarda tipo do valor na pilha   
         tipos.push(tipo1); //empilha o tipo do valor na pilha para poder validar na funcao setaValorId
 
@@ -246,16 +252,12 @@ public class Semantico implements Constants {
             Token retirado = it.next();
 
             Identificador id = getIdentificador(retirado);
-            setaValorId(id); //atribui o valor na pilha para o identificador
+            setaValorIdArray(id); //atribui o valor na pilha para o identificador
             
             it.remove();
         }
         
         tipos.push(tipo1);
-    }
-    
-    //atribuição de identificador (#7)
-    private void acao_9(){
     }
     
     //geração de código para leitura das variaveis
@@ -299,7 +301,7 @@ public class Semantico implements Constants {
             }
             tipos.push(id.getTipo());//seta o tipo de dado que foi inserido na pilha pela funcao acima
 
-            setaValorId(id);
+            setaValorIdArray(id);
         }
         ids.clear();
     }
@@ -600,7 +602,8 @@ public class Semantico implements Constants {
     }
 
     //empilha o identificador de um array(#32)
-    private void acao_33() {
+    private void acao_33() throws SemanticError {
+        System.out.println("ação 33");
     }
 
     //empilha uma constante numerica
@@ -807,5 +810,23 @@ public class Semantico implements Constants {
         String texto = "\n     stloc " + id.getNome();
 
         codigoGerado.append(texto);
+    }
+    
+    private void setaValorIdArray(Identificador id) throws SemanticError {
+        TipoID tipo = desempilhaTipo();
+
+        boolean podeAlterar = (id.getTipo() == tipo) || (id.getTipo() == TipoID.tpNumber);
+        if (!podeAlterar) {
+            String msg = "tipos incompatíveis em comando de atribuição (" + id.getTipo().getDescricao() + ", " + tipo.getDescricao() + ")";
+            throw new SemanticError(msg, token);
+        }
+        String texto = "\n     stlem " + tipo.getTipo();
+
+        codigoGerado.append(texto);
+    }
+    
+    private void empilhaArray(Identificador id) {
+        codigoGerado.append("\n     ldlem ").append(id.getNome());
+        tipos.push(id.getTipo()); //adiciona tipo do identificador 
     }
 }
